@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Info } from 'lucide-react';
 import { WorkspaceItem, ColumnState, FileType } from '@/types/workspace';
@@ -23,7 +24,6 @@ export const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({ data }) =>
     }
   ]);
   
-  const [columnSizes, setColumnSizes] = useState<number[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WorkspaceItem | null>(null);
 
@@ -55,23 +55,8 @@ export const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({ data }) =>
       path: newPath,
     });
 
-    // Update column sizes array to maintain current sizes
-    const newSizes = [...columnSizes];
-    while (newSizes.length < newColumns.length) {
-      newSizes.push(25); // Default size for new columns
-    }
-    if (newSizes.length > newColumns.length) {
-      newSizes.splice(newColumns.length);
-    }
-
     setColumns(newColumns);
-    setColumnSizes(newSizes);
-  }, [columns, columnSizes]);
-
-
-  const handleColumnSizeChange = useCallback((sizes: number[]) => {
-    setColumnSizes(sizes);
-  }, []);
+  }, [columns]);
 
   const togglePreview = () => {
     setShowPreview(!showPreview);
@@ -111,13 +96,12 @@ export const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({ data }) =>
         <ResizablePanelGroup 
           direction="horizontal" 
           className="flex-1"
-          onLayout={handleColumnSizeChange}
         >
           {/* Columns */}
           {columns.map((column, index) => (
             <React.Fragment key={`${index}-${column.path.join('-')}`}>
               <ResizablePanel 
-                defaultSize={columnSizes[index] || 25} 
+                defaultSize={25} 
                 minSize={15}
                 maxSize={50}
               >
