@@ -23,6 +23,7 @@ export const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({ data }) =>
     }
   ]);
   
+  const [columnSizes, setColumnSizes] = useState<number[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WorkspaceItem | null>(null);
 
@@ -54,9 +55,23 @@ export const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({ data }) =>
       path: newPath,
     });
 
-    setColumns(newColumns);
-  }, [columns]);
+    // Update column sizes array to maintain current sizes
+    const newSizes = [...columnSizes];
+    while (newSizes.length < newColumns.length) {
+      newSizes.push(25); // Default size for new columns
+    }
+    if (newSizes.length > newColumns.length) {
+      newSizes.splice(newColumns.length);
+    }
 
+    setColumns(newColumns);
+    setColumnSizes(newSizes);
+  }, [columns, columnSizes]);
+
+
+  const handleColumnSizeChange = useCallback((sizes: number[]) => {
+    setColumnSizes(sizes);
+  }, []);
 
   const togglePreview = () => {
     setShowPreview(!showPreview);
@@ -93,11 +108,19 @@ export const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({ data }) =>
 
       {/* Content */}
       <div className="flex-1 flex overflow-hidden">
-        <ResizablePanelGroup direction="horizontal" className="flex-1">
+        <ResizablePanelGroup 
+          direction="horizontal" 
+          className="flex-1"
+          onLayout={handleColumnSizeChange}
+        >
           {/* Columns */}
           {columns.map((column, index) => (
             <React.Fragment key={`${index}-${column.path.join('-')}`}>
-              <ResizablePanel defaultSize={25} minSize={15}>
+              <ResizablePanel 
+                defaultSize={columnSizes[index] || 25} 
+                minSize={15}
+                maxSize={50}
+              >
                 <WorkspaceColumn
                   items={column.items}
                   selectedId={column.selectedId}
@@ -105,15 +128,23 @@ export const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({ data }) =>
                   title={index === 0 ? 'Root' : column.path[column.path.length - 1]}
                 />
               </ResizablePanel>
-              {index < columns.length - 1 && <ResizableHandle withHandle />}
+              {index < columns.length - 1 && (
+                <ResizableHandle 
+                  withHandle 
+                  className="w-2 bg-workspace-border hover:bg-primary/20 transition-colors"
+                />
+              )}
             </React.Fragment>
           ))}
           
           {/* Preview Panel */}
           {showPreview && (
             <>
-              <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={30} minSize={20}>
+              <ResizableHandle 
+                withHandle 
+                className="w-2 bg-workspace-border hover:bg-primary/20 transition-colors"
+              />
+              <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
                 <PreviewPanel
                   item={selectedItem}
                   onClose={() => setShowPreview(false)}
