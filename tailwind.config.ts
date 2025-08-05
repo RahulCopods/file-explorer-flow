@@ -52,6 +52,14 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				workspace: {
+					bg: 'hsl(var(--workspace-bg))',
+					column: 'hsl(var(--workspace-column))',
+					hover: 'hsl(var(--workspace-hover))',
+					selected: 'hsl(var(--workspace-selected))',
+					border: 'hsl(var(--workspace-border))',
+					shadow: 'hsl(var(--workspace-shadow))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
