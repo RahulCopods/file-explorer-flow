@@ -1,11 +1,9 @@
-
 import React, { useState, useCallback } from 'react';
 import { Info } from 'lucide-react';
 import { WorkspaceItem, ColumnState, FileType } from '@/types/workspace';
 import { WorkspaceColumn } from './WorkspaceColumn';
 import { PreviewPanel } from './PreviewPanel';
 import { Button } from '@/components/ui/button';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { cn } from '@/lib/utils';
 
 interface WorkspaceExplorerProps {
@@ -24,6 +22,7 @@ export const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({ data }) =>
     }
   ]);
   
+  const [columnWidths, setColumnWidths] = useState<number[]>([300]);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WorkspaceItem | null>(null);
 
@@ -55,8 +54,21 @@ export const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({ data }) =>
       path: newPath,
     });
 
+    // Update column widths array
+    const newWidths = [...columnWidths];
+    while (newWidths.length < newColumns.length) {
+      newWidths.push(300);
+    }
+
     setColumns(newColumns);
-  }, [columns]);
+    setColumnWidths(newWidths);
+  }, [columns, columnWidths]);
+
+  const handleColumnWidthChange = useCallback((columnIndex: number, width: number) => {
+    const newWidths = [...columnWidths];
+    newWidths[columnIndex] = width;
+    setColumnWidths(newWidths);
+  }, [columnWidths]);
 
   const togglePreview = () => {
     setShowPreview(!showPreview);
@@ -93,50 +105,29 @@ export const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({ data }) =>
 
       {/* Content */}
       <div className="flex-1 flex overflow-hidden">
-        <ResizablePanelGroup 
-          direction="horizontal" 
-          className="flex-1"
-        >
-          {/* Columns */}
+        {/* Columns */}
+        <div className="flex-1 flex overflow-x-auto">
           {columns.map((column, index) => (
-            <React.Fragment key={`${index}-${column.path.join('-')}`}>
-              <ResizablePanel 
-                defaultSize={25} 
-                minSize={15}
-                maxSize={50}
-              >
-                <WorkspaceColumn
-                  items={column.items}
-                  selectedId={column.selectedId}
-                  onItemClick={(item) => handleItemClick(item, index)}
-                  title={index === 0 ? 'Root' : column.path[column.path.length - 1]}
-                />
-              </ResizablePanel>
-              {index < columns.length - 1 && (
-                <ResizableHandle 
-                  withHandle 
-                  className="w-2 bg-workspace-border hover:bg-primary/20 transition-colors"
-                />
-              )}
-            </React.Fragment>
+            <WorkspaceColumn
+              key={`${index}-${column.path.join('-')}`}
+              items={column.items}
+              selectedId={column.selectedId}
+              onItemClick={(item) => handleItemClick(item, index)}
+              width={columnWidths[index] || 300}
+              onWidthChange={(width) => handleColumnWidthChange(index, width)}
+              showResizer={index < columns.length - 1}
+              title={index === 0 ? 'Root' : column.path[column.path.length - 1]}
+            />
           ))}
-          
-          {/* Preview Panel */}
-          {showPreview && (
-            <>
-              <ResizableHandle 
-                withHandle 
-                className="w-2 bg-workspace-border hover:bg-primary/20 transition-colors"
-              />
-              <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
-                <PreviewPanel
-                  item={selectedItem}
-                  onClose={() => setShowPreview(false)}
-                />
-              </ResizablePanel>
-            </>
-          )}
-        </ResizablePanelGroup>
+        </div>
+
+        {/* Preview Panel */}
+        {showPreview && (
+          <PreviewPanel
+            item={selectedItem}
+            onClose={() => setShowPreview(false)}
+          />
+        )}
       </div>
     </div>
   );
